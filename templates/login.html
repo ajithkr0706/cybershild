@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberShield AI - Sign In</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    <meta name="theme-color" content="#667eea">
+    <style>
+        .google-signin-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .signup-link p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .signup-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signup-link a:hover {
+            color: #764ba2;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider span {
+            padding: 0 15px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .admin-creds {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 15px;
+            color: #666;
+        }
+
+        .admin-creds p {
+            margin: 5px 0;
+        }
+
+        .admin-creds strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background Elements -->
+    <div class="background-grid" aria-hidden="true"></div>
+    <div class="background-blur" aria-hidden="true"></div>
+    <div class="particles" aria-hidden="true">
+        <span class="particle"></span>
+        <span class="particle"></span>
+        <span class="particle"></span>
+        <span class="particle"></span>
+        <span class="particle"></span>
+    </div>
+
+    <!-- Floating Orbs -->
+    <div class="orb orb-1" aria-hidden="true"></div>
+    <div class="orb orb-2" aria-hidden="true"></div>
+
+    <!-- Main Container -->
+    <div class="login-container">
+        <!-- Scan Lines Effect -->
+        <div class="scan-lines" aria-hidden="true"></div>
+
+        <!-- Login Card -->
+        <div class="login-card">
+            <!-- Header -->
+            <div class="login-header">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="CyberShield AI Logo" class="brand-logo-img">
+                <h1 class="brand-title">CyberShield AI</h1>
+                <p class="brand-subtitle">Advanced Threat Detection</p>
+            </div>
+
+            <!-- Divider -->
+            <div class="card-divider"></div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="error-alert" role="alert">
+                            <span class="error-icon">{% if category == 'error' %}⚠️{% elif category == 'success' %}✓{% else %}ℹ️{% endif %}</span>
+                            <span class="error-text">{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Sign In Form -->
+            <form method="POST" class="login-form">
+                <!-- Email Input -->
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        <span class="label-text">Email Address</span>
+                        <span class="label-accent"></span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">📧</span>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            class="form-input" 
+                            placeholder="your@email.com"
+                            required 
+                            autocomplete="email"
+                        >
+                        <span class="input-line"></span>
+                    </div>
+                </div>
+
+                <!-- Password Input -->
+                <div class="form-group">
+                    <label for="password" class="form-label" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span class="label-text">Password</span>
+                        <a href="{{ url_for('forgot_password') }}" style="color: var(--accent-1); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-2)'" onmouseout="this.style.color='var(--accent-1)'">Forgot Password?</a>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔐</span>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="form-input" 
+                            placeholder="Your secure password"
+                            required 
+                            autocomplete="current-password"
+                        >
+                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('password', this)" aria-label="Toggle password visibility" title="Show password">
+                            <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="eye-slash-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                        <span class="input-line"></span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="login-button">
+                    <span class="button-text">Sign In</span>
+                    <span class="button-glow" aria-hidden="true"></span>
+                </button>
+            </form>
+
+            <!-- Sign Up Link -->
+            <div class="signup-link">
+                <p>Don't have an account? <a href="{{ url_for('signup') }}">Create one here</a></p>
+            </div>
+
+            <!-- Admin Demo Credentials -->
+            <div class="admin-creds">
+                <p><strong>🔑 Admin Demo Access:</strong></p>
+                <p>📧 Email: <code style="background: #ddd; padding: 2px 6px; border-radius: 3px;">mahiiii@cybershield.com</code></p>
+                <p>🔒 Password: <code style="background: #ddd; padding: 2px 6px; border-radius: 3px;">Mahi@2004</code></p>
+            </div>
+        </div>
+
+        <!-- Security Status -->
+        <div class="security-info">
+            <div class="security-item">
+                <span class="security-icon">🛡️</span>
+                <span class="security-label">Encrypted Connection</span>
+            </div>
+            <div class="security-item">
+                <span class="security-icon">✓</span>
+                <span class="security-label">System Online</span>
+            </div>
+            <div class="security-item">
+                <span class="security-icon">📡</span>
+                <span class="security-label">All Systems Operational</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+        <p>&copy; 2026 CyberShield AI | Advanced Threat Detection System</p>
+    </footer>
+
+    <script>
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const eyeIcon = btn.querySelector('.eye-icon');
+            const eyeSlashIcon = btn.querySelector('.eye-slash-icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (eyeIcon) eyeIcon.style.display = 'none';
+                if (eyeSlashIcon) eyeSlashIcon.style.display = 'inline-block';
+                btn.setAttribute('aria-label', 'Hide password');
+                btn.setAttribute('title', 'Hide password');
+            } else {
+                input.type = 'password';
+                if (eyeIcon) eyeIcon.style.display = 'inline-block';
+                if (eyeSlashIcon) eyeSlashIcon.style.display = 'none';
+                btn.setAttribute('aria-label', 'Show password');
+                btn.setAttribute('title', 'Show password');
+            }
+        }
+
+        function handleCredentialResponse(response) {
+            try {
+                // Decode JWT token
+                const base64Url = response.credential.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(
+                    atob(base64)
+                        .split('')
+                        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                        .join('')
+                );
+                const userInfo = JSON.parse(jsonPayload);
+
+                // Send to backend
+                fetch('{{ url_for("google_callback") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_token: response.credential,
+                        email: userInfo.email,
+                        sub: userInfo.sub,
+                        given_name: userInfo.given_name || '',
+                        family_name: userInfo.family_name || '',
+                        picture: userInfo.picture || ''
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect;
+                    } else {
+                        alert('Google sign-in failed: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred during sign-in');
+                });
+            } catch (error) {
+                console.error('Error decoding token:', error);
+                alert('Failed to process Google sign-in');
+            }
+        }
+
+        window.onload = function () {
+            google.accounts.id.initialize({
+                client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+                callback: handleCredentialResponse
+            });
+        };
+    </script>
+</body>
+</html>

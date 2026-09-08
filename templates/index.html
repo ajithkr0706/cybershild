@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberShield AI | Security Operations Center</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="theme-color" content="#0f1419">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="background-grid" aria-hidden="true"></div>
+    <div class="background-blur" aria-hidden="true"></div>
+    <div class="particles" aria-hidden="true">
+        <span class="particle"></span>
+        <span class="particle"></span>
+        <span class="particle"></span>
+        <span class="particle"></span>
+        <span class="particle"></span>
+    </div>
+
+    <!-- Main Container -->
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" role="navigation" aria-label="Main Navigation">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="CyberShield Logo" class="brand-logo-sidebar">
+                <span class="brand-text">CyberShield AI</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="scanner">
+                    <span class="nav-icon">🔍</span>
+                    <span class="nav-label">URL Scanner</span>
+                </a>
+                <a href="#" class="nav-item" data-page="message">
+                    <span class="nav-icon">💬</span>
+                    <span class="nav-label">Message Checker</span>
+                </a>
+                <a href="#" class="nav-item" data-page="image">
+                    <span class="nav-icon">🖼️</span>
+                    <span class="nav-label">AI Image Detector</span>
+                </a>
+                <a href="#" class="nav-item" data-page="logs">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-label">Threat Logs</span>
+                </a>
+                <a href="#" class="nav-item" data-page="stats">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-label">Model Stats</span>
+                </a>
+                <a href="#" class="nav-item" data-page="about">
+                    <span class="nav-icon">ℹ️</span>
+                    <span class="nav-label">About System</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span class="status-text">System Online</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content" role="main">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <h1 class="dashboard-title">Security Operations Center</h1>
+                    <p class="dashboard-subtitle">Real-time phishing & fake message detection</p>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <span class="user-icon">👤</span>
+                        <span class="user-text">{{ session.get('user', 'Guest') }}</span>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="logout-button" title="Logout">
+                        <span class="logout-icon">🚪</span>
+                        <span class="logout-text">Logout</span>
+                    </a>
+                </div>
+            </header>
+
+            <!-- TOP STATS CARDS -->
+            <section class="stats-grid" aria-label="Top statistics">
+                <div class="stat-card">
+                    <div class="stat-icon total">📡</div>
+                    <div class="stat-content">
+                        <p class="stat-label">Total Scanned</p>
+                        <p class="stat-value">{{ stats.total | default(0) }}</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon safe">✓</div>
+                    <div class="stat-content">
+                        <p class="stat-label">Safe URLs</p>
+                        <p class="stat-value safe-text">{{ stats.safe | default(0) }}</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon danger">⚠️</div>
+                    <div class="stat-content">
+                        <p class="stat-label">Phishing URLs</p>
+                        <p class="stat-value danger-text">{{ stats.phishing | default(0) }}</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon danger">💬</div>
+                    <div class="stat-content">
+                        <p class="stat-label">Fake Messages</p>
+                        <p class="stat-value danger-text">{{ stats.fake_messages | default(0) }}</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon danger">🖼️</div>
+                    <div class="stat-content">
+                        <p class="stat-label">AI Images</p>
+                        <p class="stat-value danger-text">{{ stats.ai_images | default(0) }}</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon accuracy">🎯</div>
+                    <div class="stat-content">
+                        <p class="stat-label">Model Accuracy</p>
+                        <p class="stat-value">{{ stats.accuracy | default('100') }}%</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- URL & MESSAGE SCANNER SECTION -->
+            <section class="scanner-section" aria-labelledby="scannerHeading">
+                <div class="scanner-card">
+                    <div class="card-header">
+                        <h2 id="scannerHeading">🔍 Security Scanner</h2>
+                        <p>Detect phishing URLs and fake messages in real-time</p>
+                    </div>
+
+                    <!-- Detection Type Tabs -->
+                    <div class="detection-tabs">
+                        <button class="tab-btn {% if detection_type != 'message' and detection_type != 'image' %}active{% endif %}" data-tab="url-scan">
+                            <span class="tab-icon">🔗</span>
+                            <span class="tab-text">URL Scanner</span>
+                        </button>
+                        <button class="tab-btn {% if detection_type == 'message' %}active{% endif %}" data-tab="message-scan">
+                            <span class="tab-icon">💬</span>
+                            <span class="tab-text">Message Checker</span>
+                        </button>
+                        <button class="tab-btn {% if detection_type == 'image' %}active{% endif %}" data-tab="image-scan">
+                            <span class="tab-icon">🖼️</span>
+                            <span class="tab-text">AI Image Detector</span>
+                        </button>
+                    </div>
+
+                    <!-- URL Scanner Form -->
+                    <div class="tab-content {% if detection_type == 'message' or detection_type == 'image' %}hidden{% endif %}" id="url-scan">
+                        <form method="POST" class="scanner-form" id="urlScannerForm">
+                            <input type="hidden" name="detection_type" value="url">
+                            <div class="input-container">
+                                <input 
+                                    type="url" 
+                                    name="url" 
+                                    id="urlInput"
+                                    placeholder="Enter URL to scan (e.g., https://example.com)" 
+                                    class="url-input"
+                                    autocomplete="off"
+                                >
+                                <button type="submit" class="scan-btn" id="urlScanBtn">
+                                    <span class="btn-spinner" aria-hidden="true"></span>
+                                    <span class="btn-icon">→</span>
+                                    <span class="btn-text">SCAN</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Message Checker Form -->
+                    <div class="tab-content {% if detection_type != 'message' %}hidden{% endif %}" id="message-scan">
+                        <form method="POST" enctype="multipart/form-data" class="scanner-form" id="messageScannerForm">
+                            <input type="hidden" name="detection_type" value="message">
+                            <div class="input-container">
+                                <textarea 
+                                    name="message" 
+                                    id="messageInput"
+                                    placeholder="Enter message to analyze or upload a screenshot proof below..." 
+                                    class="message-input"
+                                    rows="4"
+                                ></textarea>
+                            </div>
+
+                            <!-- Screenshot Proof Upload Section -->
+                            <div class="proof-upload-section">
+                                <label class="proof-upload-label">
+                                    <span class="proof-icon">📷</span> Screenshot Proof (Optional)
+                                </label>
+                                <div class="upload-dropzone" id="proofDropzone">
+                                    <input type="file" name="screenshot" id="screenshotInput" accept="image/png, image/jpeg, image/webp, image/gif" class="file-input-hidden">
+                                    <div class="dropzone-content" id="dropzoneContent">
+                                        <div class="dropzone-icon">🖼️</div>
+                                        <p class="dropzone-title">Click or drag & drop screenshot proof here</p>
+                                        <p class="dropzone-sub">Supports PNG, JPG, WEBP (Max 16MB)</p>
+                                    </div>
+                                    <div class="preview-container hidden" id="previewContainer">
+                                        <img id="screenshotPreview" src="" alt="Screenshot Proof Preview" class="screenshot-img-preview">
+                                        <div class="preview-details">
+                                            <span id="previewFilename" class="filename-text">image.png</span>
+                                            <span id="previewFilesize" class="filesize-text">1.2 MB</span>
+                                            <div class="preview-actions">
+                                                <button type="button" class="btn-ocr" id="extractTextBtn" title="Extract text using OCR">
+                                                    ✨ Extract Text from Screenshot
+                                                </button>
+                                                <button type="button" class="btn-remove-preview" id="removePreviewBtn" title="Remove Screenshot">
+                                                    ✖ Remove
+                                                </button>
+                                            </div>
+                                            <div id="ocrStatus" class="ocr-status hidden"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="scan-btn" id="messageScanBtn">
+                                <span class="btn-spinner" aria-hidden="true"></span>
+                                <span class="btn-icon">→</span>
+                                <span class="btn-text">ANALYZE MESSAGE & PROOF</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- AI Image Detector Form -->
+                    <div class="tab-content {% if detection_type != 'image' %}hidden{% endif %}" id="image-scan">
+                        <form method="POST" enctype="multipart/form-data" class="scanner-form" id="imageScannerForm">
+                            <input type="hidden" name="detection_type" value="image">
+                            <div class="proof-upload-section">
+                                <label class="proof-upload-label">
+                                    <span class="proof-icon">🖼️</span> Upload Photo to Analyze
+                                </label>
+                                <div class="upload-dropzone" id="imageDropzone">
+                                    <input type="file" name="image" id="imageInput" accept="image/png, image/jpeg, image/webp, image/gif" class="file-input-hidden">
+                                    <div class="dropzone-content" id="imageDropzoneContent">
+                                        <div class="dropzone-icon">📷</div>
+                                        <p class="dropzone-title">Click or drag & drop photo here</p>
+                                        <p class="dropzone-sub">Supports PNG, JPG, WEBP, GIF (Max 16MB)</p>
+                                    </div>
+                                    <div class="preview-container hidden" id="imagePreviewContainer">
+                                        <img id="imagePreview" src="" alt="Uploaded Photo Preview" class="screenshot-img-preview">
+                                        <div class="preview-details">
+                                            <span id="imagePreviewFilename" class="filename-text">image.png</span>
+                                            <span id="imagePreviewFilesize" class="filesize-text">1.2 MB</span>
+                                            <div class="preview-actions">
+                                                <button type="button" class="btn-remove-preview" id="imageRemovePreviewBtn" title="Remove Photo">
+                                                    ✖ Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="scan-btn" id="imageScanBtn">
+                                <span class="btn-spinner" aria-hidden="true"></span>
+                                <span class="btn-icon">→</span>
+                                <span class="btn-text">ANALYZE PHOTO</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div class="loading-state" id="loadingState" style="display: none;">
+                        <div class="scanner-spinner">
+                            <div class="spinner-ring"></div>
+                            <div class="spinner-text">Analyzing...</div>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    {% if result %}
+                    <div class="result-alert" id="resultAlert" role="status" aria-live="polite">
+                        {% if result.type == 'phishing' %}
+                            {% if result.prediction == '0' %}
+                            <div class="alert alert-safe">
+                                <div class="alert-icon">✓</div>
+                                <div class="alert-content">
+                                    <h3>Safe URL</h3>
+                                    <p>This URL appears to be legitimate and safe</p>
+                                    <div class="confidence-container" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (result.probability * 100)|round(1) }}">
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill safe-fill" style="width: {{ (result.probability * 100)|int }}%"></div>
+                                        </div>
+                                        <span class="confidence-percent">{{ (result.probability * 100)|round(1) }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-danger">
+                                <div class="alert-icon">⚠️</div>
+                                <div class="alert-content">
+                                    <h3>Phishing Detected</h3>
+                                    <p>This URL shows characteristics of a phishing attack</p>
+                                    <div class="threat-warning">🚨 Do not click or enter credentials</div>
+                                    <div class="confidence-container" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (result.probability * 100)|round(1) }}">
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill danger-fill" style="width: {{ (result.probability * 100)|int }}%"></div>
+                                        </div>
+                                        <span class="confidence-percent">{{ (result.probability * 100)|round(1) }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="scanned-url">
+                                <p class="url-label">Scanned URL:</p>
+                                <code class="url-code">{{ url }}</code>
+                            </div>
+
+                            {% if result.get('reasons') %}
+                            <div class="reasons-breakdown-card">
+                                <h4 class="reasons-title">
+                                    <span class="reasons-icon">🔍</span> Threat Analysis & Key Indicators
+                                </h4>
+                                <ul class="reasons-list">
+                                    {% for reason in result.reasons %}
+                                    <li class="reason-item reason-{{ reason.type }}">
+                                        <span class="reason-badge badge-{{ reason.type }}">
+                                            {% if reason.type == 'safe' %}✓ Safe{% elif reason.type == 'warning' %}⚠️ Warning{% else %}🚨 Risk{% endif %}
+                                        </span>
+                                        <span class="reason-text">{{ reason.text }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        {% elif result.type == 'fake_message' %}
+                            {% if result.prediction == '0' %}
+                            <div class="alert alert-safe">
+                                <div class="alert-icon">✓</div>
+                                <div class="alert-content">
+                                    <h3>Legitimate Message</h3>
+                                    <p>This message appears to be genuine and not a spam/phishing attempt</p>
+                                    <div class="confidence-container" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (result.probability * 100)|round(1) }}">
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill safe-fill" style="width: {{ (result.probability * 100)|int }}%"></div>
+                                        </div>
+                                        <span class="confidence-percent">{{ (result.probability * 100)|round(1) }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-danger">
+                                <div class="alert-icon">⚠️</div>
+                                <div class="alert-content">
+                                    <h3>Fake/Spam Message Detected</h3>
+                                    <p>This message shows characteristics of spam, phishing, or a scam</p>
+                                    <div class="threat-warning">🚨 Do not click links or provide personal information</div>
+                                    <div class="confidence-container" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (result.probability * 100)|round(1) }}">
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill danger-fill" style="width: {{ (result.probability * 100)|int }}%"></div>
+                                        </div>
+                                        <span class="confidence-percent">{{ (result.probability * 100)|round(1) }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="scanned-url">
+                                <p class="url-label">Analyzed Message:</p>
+                                <code class="url-code message-code">{{ message[:150] }}{% if message|length > 150 %}...{% endif %}</code>
+                            </div>
+
+                            {% if result.get('reasons') %}
+                            <div class="reasons-breakdown-card">
+                                <h4 class="reasons-title">
+                                    <span class="reasons-icon">🔍</span> Threat Analysis & Key Indicators
+                                </h4>
+                                <ul class="reasons-list">
+                                    {% for reason in result.reasons %}
+                                    <li class="reason-item reason-{{ reason.type }}">
+                                        <span class="reason-badge badge-{{ reason.type }}">
+                                            {% if reason.type == 'safe' %}✓ Safe{% elif reason.type == 'warning' %}⚠️ Warning{% else %}🚨 Risk{% endif %}
+                                        </span>
+                                        <span class="reason-text">{{ reason.text }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            {% if result.get('screenshot_url') %}
+                            <div class="scanned-proof-card">
+                                <p class="url-label">📸 Attached Screenshot Proof:</p>
+                                <div class="proof-image-wrapper">
+                                    <a href="{{ result.screenshot_url }}" target="_blank" title="Click to view full screenshot proof">
+                                        <img src="{{ result.screenshot_url }}" alt="Uploaded Screenshot Proof" class="proof-result-img">
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% elif result.type == 'image' %}
+                            {% if result.prediction == '0' %}
+                            <div class="alert alert-safe">
+                                <div class="alert-icon">✓</div>
+                                <div class="alert-content">
+                                    <h3>Authentic / Real Image</h3>
+                                    <p>This image displays camera/sensor noise, realistic metadata, and compression patterns typical of authentic, camera-captured photos.</p>
+                                    <div class="confidence-container" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (result.probability * 100)|round(1) }}">
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill safe-fill" style="width: {{ (result.probability * 100)|int }}%"></div>
+                                        </div>
+                                        <span class="confidence-percent">{{ (result.probability * 100)|round(1) }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-danger">
+                                <div class="alert-icon">⚠️</div>
+                                <div class="alert-content">
+                                    <h3>AI Generated / Manipulated</h3>
+                                    <p>This image matches patterns of generative AI output, missing sensor noise, or suspicious metadata tags.</p>
+                                    <div class="threat-warning">🚨 Use caution: This image may be a deepfake or AI synthetic media</div>
+                                    <div class="confidence-container" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (result.probability * 100)|round(1) }}">
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill danger-fill" style="width: {{ (result.probability * 100)|int }}%"></div>
+                                        </div>
+                                        <span class="confidence-percent">{{ (result.probability * 100)|round(1) }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="scanned-proof-card">
+                                <p class="url-label">🖼️ Uploaded Image:</p>
+                                <div class="proof-image-wrapper">
+                                    <a href="{{ result.image_url }}" target="_blank" title="Click to view full image">
+                                        <img src="{{ result.image_url }}" alt="Uploaded Image" class="proof-result-img">
+                                    </a>
+                                </div>
+                            </div>
+
+                            {% if result.get('reasons') %}
+                            <div class="reasons-breakdown-card">
+                                <h4 class="reasons-title">
+                                    <span class="reasons-icon">🔍</span> Forensic Analysis & Key Indicators
+                                </h4>
+                                <ul class="reasons-list">
+                                    {% for reason in result.reasons %}
+                                    <li class="reason-item reason-{{ reason.type }}">
+                                        <span class="reason-badge badge-{{ reason.type }}">
+                                            {% if reason.type == 'safe' %}✓ Authentic{% elif reason.type == 'warning' %}⚠️ Heuristic{% else %}🚨 AI Indicator{% endif %}
+                                        </span>
+                                        <span class="reason-text">{{ reason.text }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        {% elif result.type == 'error' %}
+                            <div class="alert alert-warning">
+                                <div class="alert-icon">⚠️</div>
+                                <div class="alert-content">
+                                    <h3>System Notice</h3>
+                                    <p>{{ result.error }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- THREAT LOGS TABLE -->
+            <section class="logs-section" aria-labelledby="logsHeading">
+                <div class="logs-card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 id="logsHeading">📋 Recent Threat Log</h2>
+                            <p>Last 10 scanned items</p>
+                        </div>
+                        <button type="button" class="btn-clear-logs" id="clearLogsBtn" title="Clear all scan history">
+                            🗑️ Clear History
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Content</th>
+                                    <th>Confidence</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if recent_logs %}
+                                    {% for log in recent_logs %}
+                                    <tr class="log-row {% if log.prediction == '0' %}safe-row{% else %}phishing-row{% endif %}">
+                                        <td>
+                                            <span class="type-badge">
+                                                {% if log.type == 'URL' %}🔗 URL{% elif log.type == 'IMAGE' %}🖼️ IMAGE{% else %}💬 MESSAGE{% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge {% if log.prediction == '0' %}safe-badge{% else %}phishing-badge{% endif %}">
+                                                {% if log.prediction == '0' %}✓ Safe{% else %}⚠️ Threat{% endif %}
+                                            </span>
+                                        </td>
+                                        <td class="url-cell">
+                                            {{ log.input[:70] }}{% if log.input|length > 70 %}...{% endif %}
+                                            {% if log.get('screenshot_url') %}
+                                                <a href="{{ log.screenshot_url }}" target="_blank" class="proof-tag-badge" title="View screenshot proof">
+                                                    📷 Proof
+                                                </a>
+                                            {% elif log.get('image_url') %}
+                                                <a href="{{ log.image_url }}" target="_blank" class="proof-tag-badge" title="View uploaded photo">
+                                                    🖼️ View
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ (log.probability * 100)|round(1) }}%</td>
+                                        <td>{{ log.time }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="empty-state">No scan history yet. Start by scanning a URL or message above.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODEL STATS SECTION -->
+            <section class="model-stats-section" aria-labelledby="modelStatsHeading">
+                <div class="stats-card">
+                    <div class="card-header">
+                        <h2 id="modelStatsHeading">📈 Model Performance</h2>
+                        <p>Random Forest Classifier Metrics</p>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <div class="metric-icon">🎯</div>
+                            <p class="metric-label">Accuracy</p>
+                            <p class="metric-value">{{ model_stats.accuracy | default('100') }}%</p>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-icon">🔍</div>
+                            <p class="metric-label">Precision</p>
+                            <p class="metric-value">{{ model_stats.precision | default('100') }}%</p>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-icon">📊</div>
+                            <p class="metric-label">Recall</p>
+                            <p class="metric-value">{{ model_stats.recall | default('100') }}%</p>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-icon">✓</div>
+                            <p class="metric-label">F1 Score</p>
+                            <p class="metric-value">{{ model_stats.f1 | default('100') }}%</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABOUT SYSTEM SECTION -->
+            <section class="about-section" id="aboutHeadingSection" aria-labelledby="aboutHeading" style="margin-bottom: 32px;">
+                <div class="stats-card">
+                    <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 14px; margin-bottom: 16px;">
+                        <h2 id="aboutHeading">ℹ️ About CyberShield AI</h2>
+                        <p>Cybersecurity Operations Center (SOC) Engine Details</p>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; line-height: 1.6;">
+                        <div>
+                            <h3 style="color: var(--accent-cyan); font-size: 1.05rem; margin-bottom: 8px;">🛡️ Unified Threat Intelligence</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 12px;">
+                                CyberShield AI is a state-of-the-art SOC automation utility combining multiple heuristic and machine learning classification layers. It analyzes URLs, raw communication text messages, and synthetic imagery in real-time to prevent credential theft, phishing, scams, and deepfakes.
+                            </p>
+                            <h3 style="color: var(--accent-purple); font-size: 1.05rem; margin-bottom: 8px;">⚙️ Feature Extraction Layer</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.92rem;">
+                                Our feature extraction algorithms compile real-time metrics (like domain depth, lexical keyword density, spatial noise distributions, unique color densities, and XMP metadata headers) to feed into the underlying classifiers.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 style="color: var(--accent-green); font-size: 1.05rem; margin-bottom: 8px;">📊 Machine Learning Classification</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 12px;">
+                                Decisions are compiled via high-performance <strong>Random Forest Classifier</strong> algorithms, offering robust predictions, real-time probability confidence estimates, and complete offline capability.
+                            </p>
+                            <div style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                                    <span style="color: var(--text-muted);">URL Classifier:</span>
+                                    <span style="color: var(--accent-cyan); font-weight: bold;">14 Lexical Features</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                                    <span style="color: var(--text-muted);">Message Classifier:</span>
+                                    <span style="color: var(--accent-purple); font-weight: bold;">11 Text Features</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                                    <span style="color: var(--text-muted);">AI Image Classifier:</span>
+                                    <span style="color: var(--accent-green); font-weight: bold;">10 Forensic Features</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FOOTER -->
+            <footer class="dashboard-footer">
+                <p>&copy; 2026 CyberShield AI | Advanced Phishing & Fake Message Detection System</p>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // Tab switching for URL and Message scanners
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                
+                // Update active tab button
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update active tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById(tabName).classList.remove('hidden');
+            });
+        });
+
+        // URL Scanner Form
+        const urlScannerForm = document.getElementById('urlScannerForm');
+        const urlScanBtn = document.getElementById('urlScanBtn');
+        
+        urlScannerForm && urlScannerForm.addEventListener('submit', function(e) {
+            const urlInput = document.getElementById('urlInput').value.trim();
+            if (!urlInput) {
+                e.preventDefault();
+                alert('Please enter a URL');
+                return;
+            }
+            document.getElementById('loadingState').style.display = 'flex';
+            urlScanBtn.disabled = true;
+        });
+
+        // Message Scanner Form
+        const messageScannerForm = document.getElementById('messageScannerForm');
+        const messageScanBtn = document.getElementById('messageScanBtn');
+        const screenshotInput = document.getElementById('screenshotInput');
+        const proofDropzone = document.getElementById('proofDropzone');
+        const dropzoneContent = document.getElementById('dropzoneContent');
+        const previewContainer = document.getElementById('previewContainer');
+        const screenshotPreview = document.getElementById('screenshotPreview');
+        const previewFilename = document.getElementById('previewFilename');
+        const previewFilesize = document.getElementById('previewFilesize');
+        const removePreviewBtn = document.getElementById('removePreviewBtn');
+        const extractTextBtn = document.getElementById('extractTextBtn');
+        const ocrStatus = document.getElementById('ocrStatus');
+        let selectedFile = null;
+
+        // Open file picker on dropzone click
+        dropzoneContent && dropzoneContent.addEventListener('click', () => screenshotInput.click());
+
+        // File input change handler
+        screenshotInput && screenshotInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                handleFileSelected(this.files[0]);
+            }
+        });
+
+        // Drag & Drop event handlers
+        if (proofDropzone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                proofDropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    proofDropzone.classList.add('dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                proofDropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    proofDropzone.classList.remove('dragover');
+                });
+            });
+
+            proofDropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    screenshotInput.files = files;
+                    handleFileSelected(files[0]);
+                }
+            });
+        }
+
+        function handleFileSelected(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file (PNG, JPG, WEBP)');
+                return;
+            }
+            selectedFile = file;
+            previewFilename.textContent = file.name;
+            previewFilesize.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                screenshotPreview.src = e.target.result;
+                dropzoneContent.classList.add('hidden');
+                previewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Remove screenshot preview
+        removePreviewBtn && removePreviewBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            screenshotInput.value = '';
+            selectedFile = null;
+            screenshotPreview.src = '';
+            dropzoneContent.classList.remove('hidden');
+            previewContainer.classList.add('hidden');
+            if (ocrStatus) {
+                ocrStatus.classList.add('hidden');
+                ocrStatus.textContent = '';
+            }
+        });
+
+        // OCR Text Extraction using Tesseract.js
+        extractTextBtn && extractTextBtn.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            if (!selectedFile && !screenshotPreview.src) {
+                alert('Please select or upload a screenshot first.');
+                return;
+            }
+
+            if (typeof Tesseract === 'undefined') {
+                alert('OCR engine is loading or unavailable. Please type text manually or try again in a few seconds.');
+                return;
+            }
+
+            extractTextBtn.disabled = true;
+            extractTextBtn.innerHTML = '⏳ Extracting Text...';
+            if (ocrStatus) {
+                ocrStatus.classList.remove('hidden');
+                ocrStatus.textContent = 'Analyzing text in screenshot...';
+            }
+
+            try {
+                const worker = await Tesseract.createWorker('eng');
+                const ret = await worker.recognize(screenshotPreview.src);
+                await worker.terminate();
+
+                const extractedText = ret.data.text.trim();
+                if (extractedText) {
+                    const messageInput = document.getElementById('messageInput');
+                    messageInput.value = extractedText;
+                    if (ocrStatus) {
+                        ocrStatus.textContent = '✓ Text successfully extracted from screenshot!';
+                        ocrStatus.style.color = '#2ce69b';
+                    }
+                } else {
+                    if (ocrStatus) {
+                        ocrStatus.textContent = '⚠️ No clear text detected in screenshot.';
+                        ocrStatus.style.color = '#ff9f43';
+                    }
+                }
+            } catch (err) {
+                console.error('OCR Error:', err);
+                if (ocrStatus) {
+                    ocrStatus.textContent = '❌ Failed to extract text. You can still submit the screenshot proof directly.';
+                    ocrStatus.style.color = '#ff4d6d';
+                }
+            } finally {
+                extractTextBtn.disabled = false;
+                extractTextBtn.innerHTML = '✨ Extract Text from Screenshot';
+            }
+        });
+
+        // Image Scanner Form
+        const imageScannerForm = document.getElementById('imageScannerForm');
+        const imageScanBtn = document.getElementById('imageScanBtn');
+        const imageInput = document.getElementById('imageInput');
+        const imageDropzone = document.getElementById('imageDropzone');
+        const imageDropzoneContent = document.getElementById('imageDropzoneContent');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewFilename = document.getElementById('imagePreviewFilename');
+        const imagePreviewFilesize = document.getElementById('imagePreviewFilesize');
+        const imageRemovePreviewBtn = document.getElementById('imageRemovePreviewBtn');
+        let selectedImageFile = null;
+
+        // Open file picker on dropzone click
+        imageDropzoneContent && imageDropzoneContent.addEventListener('click', () => imageInput.click());
+
+        // File input change handler
+        imageInput && imageInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                handleImageFileSelected(this.files[0]);
+            }
+        });
+
+        // Drag & Drop event handlers
+        if (imageDropzone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                imageDropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    imageDropzone.classList.add('dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                imageDropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    imageDropzone.classList.remove('dragover');
+                });
+            });
+
+            imageDropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    imageInput.files = files;
+                    handleImageFileSelected(files[0]);
+                }
+            });
+        }
+
+        function handleImageFileSelected(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file (PNG, JPG, WEBP, GIF)');
+                return;
+            }
+            selectedImageFile = file;
+            imagePreviewFilename.textContent = file.name;
+            imagePreviewFilesize.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imageDropzoneContent.classList.add('hidden');
+                imagePreviewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Remove image preview
+        imageRemovePreviewBtn && imageRemovePreviewBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            imageInput.value = '';
+            selectedImageFile = null;
+            imagePreview.src = '';
+            imageDropzoneContent.classList.remove('hidden');
+            imagePreviewContainer.classList.add('hidden');
+        });
+
+        imageScannerForm && imageScannerForm.addEventListener('submit', function(e) {
+            const fileAttached = imageInput && imageInput.files && imageInput.files.length > 0;
+            
+            if (!fileAttached) {
+                e.preventDefault();
+                alert('Please upload a photo to analyze.');
+                return;
+            }
+            document.getElementById('loadingState').style.display = 'flex';
+            imageScanBtn.disabled = true;
+        });
+
+        messageScannerForm && messageScannerForm.addEventListener('submit', function(e) {
+            const messageInput = document.getElementById('messageInput').value.trim();
+            const fileAttached = screenshotInput && screenshotInput.files && screenshotInput.files.length > 0;
+            
+            if (!messageInput && !fileAttached) {
+                e.preventDefault();
+                alert('Please enter a message or upload a screenshot proof.');
+                return;
+            }
+            document.getElementById('loadingState').style.display = 'flex';
+            messageScanBtn.disabled = true;
+        });
+
+        // Show results on page load
+        window.addEventListener('load', function() {
+            document.getElementById('loadingState').style.display = 'none';
+            if (document.getElementById('resultAlert')) {
+                document.getElementById('resultAlert').style.animation = 'slideInUp 0.6s ease-out forwards';
+            }
+            urlScanBtn && (urlScanBtn.disabled = false);
+            messageScanBtn && (messageScanBtn.disabled = false);
+            imageScanBtn && (imageScanBtn.disabled = false);
+            document.getElementById('urlInput') && document.getElementById('urlInput').focus();
+        });
+
+        // Sidebar navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                const targetPage = this.getAttribute('data-page');
+                if (targetPage === 'dashboard') {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else if (targetPage === 'scanner') {
+                    const tabBtn = document.querySelector('[data-tab="url-scan"]');
+                    tabBtn && tabBtn.click();
+                    document.getElementById('url-scan')?.scrollIntoView({ behavior: 'smooth' });
+                } else if (targetPage === 'message') {
+                    const tabBtn = document.querySelector('[data-tab="message-scan"]');
+                    tabBtn && tabBtn.click();
+                    document.getElementById('message-scan')?.scrollIntoView({ behavior: 'smooth' });
+                } else if (targetPage === 'image') {
+                    const tabBtn = document.querySelector('[data-tab="image-scan"]');
+                    tabBtn && tabBtn.click();
+                    document.getElementById('image-scan')?.scrollIntoView({ behavior: 'smooth' });
+                } else if (targetPage === 'logs') {
+                    document.querySelector('.logs-section')?.scrollIntoView({ behavior: 'smooth' });
+                } else if (targetPage === 'stats') {
+                    document.querySelector('.model-stats-section')?.scrollIntoView({ behavior: 'smooth' });
+                } else if (targetPage === 'about') {
+                    document.getElementById('aboutHeadingSection')?.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Clear threat logs history
+        const clearLogsBtn = document.getElementById('clearLogsBtn');
+        clearLogsBtn && clearLogsBtn.addEventListener('click', async function() {
+            if (!confirm('Are you sure you want to delete all threat log history and reset counters?')) {
+                return;
+            }
+            
+            clearLogsBtn.disabled = true;
+            const originalHTML = clearLogsBtn.innerHTML;
+            clearLogsBtn.innerHTML = '⏳ Clearing...';
+            
+            try {
+                const response = await fetch('/clear_logs?ajax=true', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    // Update table rows to empty state
+                    const tbody = document.querySelector('.logs-table tbody');
+                    if (tbody) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="empty-state">No scan history yet. Start by scanning a URL or message above.</td>
+                            </tr>
+                        `;
+                    }
+                    
+                    // Reset stats cards counters
+                    const statValues = document.querySelectorAll('.stat-card .stat-value');
+                    statValues.forEach(val => {
+                        // Check if it's the accuracy card (keeps accuracy at 95.8% or 100%)
+                        if (!val.textContent.includes('%')) {
+                            val.textContent = '0';
+                        }
+                    });
+                    
+                    alert('Threat log history and statistics reset successfully!');
+                } else {
+                    alert('Failed to clear logs: ' + (data.message || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Error clearing logs:', err);
+                alert('Connection error occurred while clearing threat logs.');
+            } finally {
+                clearLogsBtn.disabled = false;
+                clearLogsBtn.innerHTML = originalHTML;
+            }
+        });
+
+        // Button ripple effect
+        const scanBtns = document.querySelectorAll('.scan-btn');
+        scanBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (e.target.closest('.url-input') && !document.getElementById('urlInput').value.trim()) return;
+                if (e.target.closest('.message-input') && !document.getElementById('messageInput').value.trim()) return;
+                
+                const rect = this.getBoundingClientRect();
+                const rx = e.clientX - rect.left;
+                const ry = e.clientY - rect.top;
+                const span = document.createElement('span');
+                span.className = 'ripple';
+                span.style.left = rx + 'px';
+                span.style.top = ry + 'px';
+                this.appendChild(span);
+                span.addEventListener('animationend', () => span.remove());
+            });
+        });
+    </script>
+</body>
+</html>
