@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import joblib
+import numpy as np
 from feature_extraction import (
     extract_features, extract_message_features, extract_image_features,
     get_url_reasons, get_message_reasons, get_image_reasons
@@ -136,6 +137,61 @@ class User(db.Model):
     
     def __repr__(self):
         return f'<User {self.email}>'
+
+
+def init_db():
+    """Ensure database tables and initial seed users exist (vital for serverless deployments like Vercel)."""
+    with app.app_context():
+        try:
+            db.create_all()
+            
+            # Create demo admin user if not exists
+            admin_user = User.query.filter_by(email=ADMIN_EMAIL).first()
+            if not admin_user:
+                admin_user = User(
+                    email=ADMIN_EMAIL,
+                    username='admin',
+                    first_name='System',
+                    last_name='Admin',
+                    auth_method='email',
+                    is_admin=True
+                )
+                admin_user.password_hash = ADMIN_PASSWORD_HASH
+                db.session.add(admin_user)
+                db.session.commit()
+                print(f"Admin user created: {ADMIN_EMAIL}")
+
+            # Create demo user from README if not exists
+            demo_email = 'yadavmahendhar65@gmail.com'
+            demo_user = User.query.filter_by(email=demo_email).first()
+            if not demo_user:
+                demo_username = 'mahendhar'
+                if User.query.filter_by(username=demo_username).first():
+                    demo_username = 'mahendhar_demo'
+                demo_user = User(
+                    email=demo_email,
+                    username=demo_username,
+                    first_name='Mahendhar',
+                    last_name='Yadav',
+                    auth_method='email',
+                    is_admin=False
+                )
+                demo_user.set_password('Mahi@123456')
+                db.session.add(demo_user)
+                try:
+                    db.session.commit()
+                    print(f"Demo user created: {demo_email}")
+                except Exception:
+                    db.session.rollback()
+        except Exception as e:
+            print(f"Database init exception: {e}")
+
+
+# Run init_db on module load to support Vercel WSGI environment
+try:
+    init_db()
+except Exception as e:
+    print(f"Failed to auto-init DB on load: {e}")
 
 
 def login_required(f):
@@ -308,12 +364,17 @@ def login():
             flash('Email and password are required', 'error')
             return redirect(url_for('login'))
         
-        user = User.query.filter_by(email=email).first()
+        try:
+            user = User.query.filter_by(email=email).first()
+        except Exception:
+            init_db()
+            user = User.query.filter_by(email=email).first()
         
         if user and user.auth_method == 'email' and user.check_password(password):
             session['user_id'] = user.id
             session['email'] = user.email
             session['username'] = user.username
+            session['user'] = user.username
             session.permanent = True
             flash(f'Welcome back, {user.username}!', 'success')
             return redirect(url_for('index'))
@@ -352,7 +413,13 @@ def signup():
             flash('Password must be at least 8 characters long', 'error')
             return redirect(url_for('signup'))
         
-        if User.query.filter_by(email=email).first():
+        try:
+            existing_user = User.query.filter_by(email=email).first()
+        except Exception:
+            init_db()
+            existing_user = User.query.filter_by(email=email).first()
+            
+        if existing_user:
             flash('Email already registered', 'error')
             return redirect(url_for('signup'))
         
@@ -531,6 +598,7 @@ def google_callback():
         session['user_id'] = user.id
         session['email'] = user.email
         session['username'] = user.username
+        session['user'] = user.username
         session.permanent = True
         
         return jsonify({'success': True, 'redirect': url_for('index')})
@@ -841,47 +909,5 @@ def clear_logs():
 
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        
-        # Create demo admin user if not exists
-        admin_user = User.query.filter_by(email=ADMIN_EMAIL).first()
-        if not admin_user:
-            admin_user = User(
-                email=ADMIN_EMAIL,
-                username='admin',
-                first_name='System',
-                last_name='Admin',
-                auth_method='email',
-                is_admin=True
-            )
-            admin_user.password_hash = ADMIN_PASSWORD_HASH
-            db.session.add(admin_user)
-            db.session.commit()
-            print(f"Admin user created: {ADMIN_EMAIL}")
-            print(f"Admin password: Mahi@2004")
-
-        # Create demo user from README if not exists
-        demo_email = 'yadavmahendhar65@gmail.com'
-        demo_user = User.query.filter_by(email=demo_email).first()
-        if not demo_user:
-            demo_username = 'mahendhar'
-            if User.query.filter_by(username=demo_username).first():
-                demo_username = 'mahendhar_demo'
-            demo_user = User(
-                email=demo_email,
-                username=demo_username,
-                first_name='Mahendhar',
-                last_name='Yadav',
-                auth_method='email',
-                is_admin=False
-            )
-            demo_user.set_password('Mahi@123456')
-            db.session.add(demo_user)
-            try:
-                db.session.commit()
-                print(f"Demo user created: {demo_email}")
-            except Exception:
-                db.session.rollback()
-    
+    init_db()
     app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
