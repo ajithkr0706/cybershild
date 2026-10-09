@@ -388,19 +388,19 @@
             <div class="metrics-grid">
                 <div class="metric">
                     <div class="metric-name">Accuracy</div>
-                    <div class="metric-value">{{ model_stats.accuracy }}%</div>
+                    <div class="metric-value">{{ '%.1f'|format(model_stats.accuracy) if model_stats.accuracy is number else model_stats.accuracy }}%</div>
                 </div>
                 <div class="metric">
                     <div class="metric-name">Precision</div>
-                    <div class="metric-value">{{ model_stats.precision }}%</div>
+                    <div class="metric-value">{{ '%.1f'|format(model_stats.precision) if model_stats.precision is number else model_stats.precision }}%</div>
                 </div>
                 <div class="metric">
                     <div class="metric-name">Recall</div>
-                    <div class="metric-value">{{ model_stats.recall }}%</div>
+                    <div class="metric-value">{{ '%.1f'|format(model_stats.recall) if model_stats.recall is number else model_stats.recall }}%</div>
                 </div>
                 <div class="metric">
                     <div class="metric-name">F1 Score</div>
-                    <div class="metric-value">{{ model_stats.f1_score }}%</div>
+                    <div class="metric-value">{{ '%.1f'|format(model_stats.f1_score or model_stats.f1) if (model_stats.f1_score or model_stats.f1) is number else (model_stats.f1_score or model_stats.f1) }}%</div>
                 </div>
                 <div class="metric">
                     <div class="metric-name">Training Samples</div>
@@ -583,5 +583,183 @@
             });
         }
     </script>
+
+    <!-- FLOATING CHATBOT WIDGET HTML FOR ADMIN PANEL -->
+    <div class="floating-chat-container">
+        <div class="floating-chat-drawer hidden" id="chatDrawer">
+            <div class="drawer-header">
+                <div class="drawer-title">
+                    <span class="drawer-bot-avatar">🤖</span>
+                    <div>
+                        <h4>CyberBot AI SOC</h4>
+                        <span class="drawer-status"><span class="status-dot"></span> Online</span>
+                    </div>
+                </div>
+                <div class="drawer-header-actions">
+                    <button type="button" id="drawerClearBtn" class="drawer-icon-btn" title="Clear Chat">🗑️</button>
+                    <button type="button" id="drawerCloseBtn" class="drawer-icon-btn" title="Close Drawer" onclick="closeCyberBotDrawer(event)">✖</button>
+                </div>
+            </div>
+
+            <div class="drawer-body" id="drawerChatMessages">
+                <div class="chat-bubble bot-bubble">
+                    <div class="bubble-header">
+                        <span class="bubble-avatar">🤖</span>
+                        <span class="bubble-author">CyberBot</span>
+                    </div>
+                    <div class="bubble-content">
+                        <p>👋 Hello Admin! Ask me any security question or paste a suspicious link/message to analyze!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="drawer-quick-chips">
+                <button type="button" class="drawer-chip" data-prompt="How to spot phishing emails?">🔍 Spot Phishing</button>
+                <button type="button" class="drawer-chip" data-prompt="How to set up 2FA?">🔐 2FA Guide</button>
+                <button type="button" class="drawer-chip" data-prompt="Check if http://test-phish-link.com is safe">🛡️ Test Link</button>
+            </div>
+
+            <div class="drawer-footer">
+                <input type="text" id="drawerChatInput" class="drawer-input" placeholder="Type message or URL..." />
+                <button type="button" id="drawerSendBtn" class="drawer-send-btn">🚀</button>
+            </div>
+        </div>
+
+        <button type="button" class="floating-chat-trigger" id="chatLauncher" title="Talk to CyberBot AI Assistant" onclick="toggleCyberBotDrawer(event)">
+            <span class="trigger-badge">AI</span>
+            <span class="trigger-icon">🤖</span>
+            <span class="trigger-glow"></span>
+        </button>
+    </div>
+
+    <script>
+        window.closeCyberBotDrawer = function(e) {
+            if (e) e.stopPropagation();
+            const drawer = document.getElementById('chatDrawer');
+            if (drawer) drawer.classList.add('hidden');
+        };
+
+        window.toggleCyberBotDrawer = function(e) {
+            if (e) e.stopPropagation();
+            const drawer = document.getElementById('chatDrawer');
+            if (drawer) {
+                drawer.classList.toggle('hidden');
+                if (!drawer.classList.contains('hidden')) {
+                    const input = document.getElementById('drawerChatInput');
+                    input && input.focus();
+                }
+            }
+        };
+
+        // CyberBot Drawer Controller for Admin Dashboard
+        (function() {
+            const chatLauncher = document.getElementById('chatLauncher');
+            const chatDrawer = document.getElementById('chatDrawer');
+            const drawerCloseBtn = document.getElementById('drawerCloseBtn');
+            const drawerClearBtn = document.getElementById('drawerClearBtn');
+            const drawerChatInput = document.getElementById('drawerChatInput');
+            const drawerSendBtn = document.getElementById('drawerSendBtn');
+            const drawerChatMessages = document.getElementById('drawerChatMessages');
+
+            let chatHistory = [];
+
+            chatLauncher && chatLauncher.addEventListener('click', (e) => toggleCyberBotDrawer(e));
+            drawerCloseBtn && drawerCloseBtn.addEventListener('click', (e) => closeCyberBotDrawer(e));
+
+
+            document.querySelectorAll('.drawer-chip').forEach(chip => {
+                chip.addEventListener('click', function() {
+                    const promptText = this.getAttribute('data-prompt');
+                    if (promptText) sendAdminChatMessage(promptText);
+                });
+            });
+
+            drawerSendBtn && drawerSendBtn.addEventListener('click', () => {
+                const text = drawerChatInput.value.trim();
+                if (text) {
+                    sendAdminChatMessage(text);
+                    drawerChatInput.value = '';
+                }
+            });
+
+            drawerChatInput && drawerChatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    drawerSendBtn.click();
+                }
+            });
+
+            drawerClearBtn && drawerClearBtn.addEventListener('click', () => {
+                chatHistory = [];
+                drawerChatMessages.innerHTML = `
+                    <div class="chat-bubble bot-bubble">
+                        <div class="bubble-header">
+                            <span class="bubble-avatar">🤖</span>
+                            <span class="bubble-author">CyberBot</span>
+                        </div>
+                        <div class="bubble-content">
+                            <p>👋 Chat cleared. How can I assist you, Admin?</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            function formatMarkdown(text) {
+                if (!text) return '';
+                let formatted = text
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/### (.*?)\n/g, '<h4 style="color: #00d9ff; margin: 6px 0;">$1</h4>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`([^`]+)`/g, '<code style="background: rgba(0,0,0,0.4); padding: 2px 4px; border-radius: 4px;">$1</code>')
+                    .replace(/\n/g, '<br/>');
+                return '<p>' + formatted + '</p>';
+            }
+
+            function appendBubble(sender, rawText) {
+                const isUser = (sender === 'user');
+                const html = `
+                    <div class="chat-bubble ${isUser ? 'user-bubble' : 'bot-bubble'}">
+                        <div class="bubble-header">
+                            <span class="bubble-avatar">${isUser ? '👤' : '🤖'}</span>
+                            <span class="bubble-author">${isUser ? 'You' : 'CyberBot'}</span>
+                        </div>
+                        <div class="bubble-content">
+                            ${isUser ? '<p>' + rawText.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>' : formatMarkdown(rawText)}
+                        </div>
+                    </div>
+                `;
+                drawerChatMessages.insertAdjacentHTML('beforeend', html);
+                drawerChatMessages.scrollTop = drawerChatMessages.scrollHeight;
+            }
+
+            async function sendAdminChatMessage(text) {
+                if (!text || !text.trim()) return;
+                appendBubble('user', text);
+                chatHistory.push({ sender: 'user', text: text });
+                drawerSendBtn.disabled = true;
+
+                try {
+                    const resp = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: text, history: chatHistory })
+                    });
+                    const data = await resp.json();
+                    if (data.success && data.response) {
+                        appendBubble('bot', data.response);
+                        chatHistory.push({ sender: 'bot', text: data.response });
+                    } else {
+                        appendBubble('bot', '⚠️ ' + (data.error || 'Could not process request.'));
+                    }
+                } catch (e) {
+                    appendBubble('bot', '❌ Error connecting to server.');
+                } finally {
+                    drawerSendBtn.disabled = false;
+                }
+            }
+        })();
+    </script>
 </body>
 </html>
+

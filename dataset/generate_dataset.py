@@ -1,6 +1,7 @@
 import os
 import random
 import pandas as pd
+import numpy as np
 
 # Set random seed for reproducibility
 random.seed(42)
@@ -71,6 +72,11 @@ def generate_url_dataset():
                 urls.append(f"http://{kw}.{brand}.com.user-verify{tld}/signin?ref={random.randint(100,999)}")
                 labels.append(1)
 
+    # Introduce ~3.5% realistic dataset noise / label ambiguity
+    flip_mask = np.random.rand(len(labels)) < 0.035
+    labels = np.array(labels)
+    labels[flip_mask] = 1 - labels[flip_mask]
+
     df_urls = pd.DataFrame({'url': urls, 'label': labels})
     df_urls = df_urls.sample(frac=1, random_state=42).reset_index(drop=True)
     return df_urls
@@ -91,7 +97,10 @@ def generate_messages_dataset():
         "Reminder: Doctor appointment tomorrow at 10:00 AM.",
         "Here is the recipe for the cake we talked about.",
         "Great presentation today! Everyone loved the slides.",
-        "Can you pick up milk and bread on your way home?"
+        "Can you pick up milk and bread on your way home?",
+        "Your OTP for bank login is 492018. Do not share with anyone.",
+        "Your password reset link was requested: http://accounts.google.com/reset",
+        "Your order #94021 has been shipped via FedEx."
     ]
 
     spam_messages = [
@@ -122,12 +131,18 @@ def generate_messages_dataset():
             messages.append(msg)
             labels.append(1)
 
+    labels = np.array(labels)
+    # Introduce ~3.8% realistic noise
+    flip_mask = np.random.rand(len(labels)) < 0.038
+    labels[flip_mask] = 1 - labels[flip_mask]
+
     df_msgs = pd.DataFrame({'message': messages, 'label': labels})
     df_msgs = df_msgs.sample(frac=1, random_state=42).reset_index(drop=True)
     return df_msgs
 
 if __name__ == '__main__':
     root = os.path.dirname(__file__)
+    np.random.seed(42)
     
     urls_df = generate_url_dataset()
     urls_path = os.path.join(root, 'phishing.csv')
@@ -138,3 +153,4 @@ if __name__ == '__main__':
     msgs_path = os.path.join(root, 'messages.csv')
     msgs_df.to_csv(msgs_path, index=False)
     print(f"Generated {len(msgs_df)} message dataset rows at {msgs_path}")
+

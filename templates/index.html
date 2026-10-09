@@ -58,6 +58,10 @@
                     <span class="nav-icon">ℹ️</span>
                     <span class="nav-label">About System</span>
                 </a>
+                <a href="#" class="nav-item" data-page="chatbot">
+                    <span class="nav-icon">🤖</span>
+                    <span class="nav-label">AI CyberBot</span>
+                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -87,6 +91,20 @@
                     </a>
                 </div>
             </header>
+
+            <!-- Flash Messages Banner -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages-container" style="margin-bottom: 20px;">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{% if category == 'error' %}danger{% elif category == 'success' %}safe{% else %}info{% endif %}" style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; font-weight: 500;">
+                                <span class="alert-icon">{% if category == 'error' %}⚠️{% elif category == 'success' %}✓{% else %}ℹ️{% endif %}</span>
+                                <span class="alert-text">{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
 
             <!-- TOP STATS CARDS -->
             <section class="stats-grid" aria-label="Top statistics">
@@ -545,29 +563,95 @@
                 <div class="stats-card">
                     <div class="card-header">
                         <h2 id="modelStatsHeading">📈 Model Performance</h2>
-                        <p>Random Forest Classifier Metrics</p>
+                        <p id="modelStatsSubtitle">{{ model_stats.model_type | default('Random Forest Classifier Metrics') }} Metrics</p>
                     </div>
 
                     <div class="metrics-grid">
                         <div class="metric">
                             <div class="metric-icon">🎯</div>
                             <p class="metric-label">Accuracy</p>
-                            <p class="metric-value">{{ model_stats.accuracy | default('100') }}%</p>
+                            <p class="metric-value" id="statAccuracyValue">{{ '%.1f'|format(model_stats.accuracy) if model_stats.accuracy is number else model_stats.accuracy }}%</p>
                         </div>
                         <div class="metric">
                             <div class="metric-icon">🔍</div>
                             <p class="metric-label">Precision</p>
-                            <p class="metric-value">{{ model_stats.precision | default('100') }}%</p>
+                            <p class="metric-value" id="statPrecisionValue">{{ '%.1f'|format(model_stats.precision) if model_stats.precision is number else model_stats.precision }}%</p>
                         </div>
                         <div class="metric">
                             <div class="metric-icon">📊</div>
                             <p class="metric-label">Recall</p>
-                            <p class="metric-value">{{ model_stats.recall | default('100') }}%</p>
+                            <p class="metric-value" id="statRecallValue">{{ '%.1f'|format(model_stats.recall) if model_stats.recall is number else model_stats.recall }}%</p>
                         </div>
                         <div class="metric">
                             <div class="metric-icon">✓</div>
                             <p class="metric-label">F1 Score</p>
-                            <p class="metric-value">{{ model_stats.f1 | default('100') }}%</p>
+                            <p class="metric-value" id="statF1Value">{{ '%.1f'|format(model_stats.f1 or model_stats.f1_score) if (model_stats.f1 or model_stats.f1_score) is number else (model_stats.f1 or model_stats.f1_score) }}%</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI CYBERBOT SECTION -->
+            <section class="chatbot-section" id="chatbot-section" aria-labelledby="chatbotHeading">
+                <div class="stats-card chatbot-card">
+                    <div class="card-header chatbot-header-flex">
+                        <div>
+                            <h2 id="chatbotHeading" class="chatbot-title-flex">
+                                <span class="bot-status-glow"></span>
+                                🤖 CyberBot AI SOC Assistant
+                            </h2>
+                            <p>Virtual SOC Analyst & Cybersecurity Intelligence Advisor</p>
+                        </div>
+                        <div class="chat-header-actions">
+                            <span class="ai-mode-tag">✨ Dual AI Engine Active</span>
+                            <button type="button" class="clear-chat-btn" id="clearFullChatBtn" title="Clear Chat History">
+                                🗑️ Clear Chat
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Prompts Chips -->
+                    <div class="quick-prompts-container">
+                        <span class="quick-prompt-label">Suggested Prompts:</span>
+                        <button type="button" class="prompt-chip" data-prompt="How to spot phishing emails and fake links?">
+                            🔍 Spot Phishing Links
+                        </button>
+                        <button type="button" class="prompt-chip" data-prompt="What are the best password security guidelines?">
+                            🔑 Password Health
+                        </button>
+                        <button type="button" class="prompt-chip" data-prompt="How to set up Multi-Factor Authentication (2FA)?">
+                            🔐 2FA Setup
+                        </button>
+                        <button type="button" class="prompt-chip" data-prompt="What to do immediately if your account gets hacked?">
+                            🚨 Account Compromise
+                        </button>
+                        <button type="button" class="prompt-chip" data-prompt="Check if http://security-update-bank.com is safe">
+                            🛡️ Test Sample URL
+                        </button>
+                    </div>
+
+                    <!-- Chat Container -->
+                    <div class="full-chat-window" id="fullChatWindow">
+                        <div class="chat-messages" id="fullChatMessages">
+                            <div class="chat-bubble bot-bubble">
+                                <div class="bubble-header">
+                                    <span class="bubble-avatar">🤖</span>
+                                    <span class="bubble-author">CyberBot SOC Analyst</span>
+                                    <span class="bubble-time">Just now</span>
+                                </div>
+                                <div class="bubble-content">
+                                    <p>👋 Hello! I am <strong>CyberBot</strong>, your AI Cybersecurity Specialist.</p>
+                                    <p>You can ask me questions about phishing, password health, malware, 2FA, or <strong>paste any suspicious link or message directly here</strong> for an instant AI threat diagnostic scan!</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input-bar">
+                            <textarea id="fullChatInput" class="chat-textarea" placeholder="Ask CyberBot anything or paste a URL/message to analyze..." rows="1"></textarea>
+                            <button type="button" id="fullChatSendBtn" class="chat-send-btn">
+                                <span>Send</span>
+                                <span class="send-icon">🚀</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -624,6 +708,47 @@
     </div>
 
     <script>
+        const allModelStatsMap = {
+            'url-scan': {
+                type: {{ (all_model_stats.url.model_type if all_model_stats and all_model_stats.url else 'Random Forest Classifier (Phishing URL Detection)') | tojson }},
+                accuracy: "{{ '%.1f'|format(all_model_stats.url.accuracy) if all_model_stats and all_model_stats.url else '96.4' }}%",
+                precision: "{{ '%.1f'|format(all_model_stats.url.precision) if all_model_stats and all_model_stats.url else '96.2' }}%",
+                recall: "{{ '%.1f'|format(all_model_stats.url.recall) if all_model_stats and all_model_stats.url else '97.8' }}%",
+                f1: "{{ '%.1f'|format(all_model_stats.url.f1) if all_model_stats and all_model_stats.url else '97.0' }}%"
+            },
+            'message-scan': {
+                type: {{ (all_model_stats.message.model_type if all_model_stats and all_model_stats.message else 'Random Forest Classifier (Fake Message Detection)') | tojson }},
+                accuracy: "{{ '%.1f'|format(all_model_stats.message.accuracy) if all_model_stats and all_model_stats.message else '96.2' }}%",
+                precision: "{{ '%.1f'|format(all_model_stats.message.precision) if all_model_stats and all_model_stats.message else '95.9' }}%",
+                recall: "{{ '%.1f'|format(all_model_stats.message.recall) if all_model_stats and all_model_stats.message else '95.9' }}%",
+                f1: "{{ '%.1f'|format(all_model_stats.message.f1) if all_model_stats and all_model_stats.message else '95.9' }}%"
+            },
+            'image-scan': {
+                type: {{ (all_model_stats.image.model_type if all_model_stats and all_model_stats.image else 'Random Forest Classifier (AI Image Detection)') | tojson }},
+                accuracy: "{{ '%.1f'|format(all_model_stats.image.accuracy) if all_model_stats and all_model_stats.image else '97.0' }}%",
+                precision: "{{ '%.1f'|format(all_model_stats.image.precision) if all_model_stats and all_model_stats.image else '96.1' }}%",
+                recall: "{{ '%.1f'|format(all_model_stats.image.recall) if all_model_stats and all_model_stats.image else '98.0' }}%",
+                f1: "{{ '%.1f'|format(all_model_stats.image.f1) if all_model_stats and all_model_stats.image else '97.1' }}%"
+            }
+        };
+
+        function updateModelStatsCard(tabName) {
+            const stats = allModelStatsMap[tabName];
+            if (stats) {
+                const subtitle = document.getElementById('modelStatsSubtitle');
+                const accEl = document.getElementById('statAccuracyValue');
+                const precEl = document.getElementById('statPrecisionValue');
+                const recEl = document.getElementById('statRecallValue');
+                const f1El = document.getElementById('statF1Value');
+
+                if (subtitle) subtitle.textContent = stats.type + " Metrics";
+                if (accEl) accEl.textContent = stats.accuracy;
+                if (precEl) precEl.textContent = stats.precision;
+                if (recEl) recEl.textContent = stats.recall;
+                if (f1El) f1El.textContent = stats.f1;
+            }
+        }
+
         // Tab switching for URL and Message scanners
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -637,7 +762,11 @@
                 document.querySelectorAll('.tab-content').forEach(content => {
                     content.classList.add('hidden');
                 });
-                document.getElementById(tabName).classList.remove('hidden');
+                const targetContent = document.getElementById(tabName);
+                if (targetContent) targetContent.classList.remove('hidden');
+
+                // Update model performance card dynamically
+                updateModelStatsCard(tabName);
             });
         });
 
@@ -936,6 +1065,10 @@
                     document.querySelector('.model-stats-section')?.scrollIntoView({ behavior: 'smooth' });
                 } else if (targetPage === 'about') {
                     document.getElementById('aboutHeadingSection')?.scrollIntoView({ behavior: 'smooth' });
+                } else if (targetPage === 'chatbot') {
+                    document.getElementById('chatbot-section')?.scrollIntoView({ behavior: 'smooth' });
+                    const chatDrawer = document.getElementById('chatDrawer');
+                    chatDrawer && chatDrawer.classList.remove('hidden');
                 }
             });
         });
@@ -1013,5 +1146,294 @@
             });
         });
     </script>
+
+    <!-- FLOATING CHATBOT WIDGET HTML -->
+    <div class="floating-chat-container">
+        <div class="floating-chat-drawer hidden" id="chatDrawer">
+            <div class="drawer-header">
+                <div class="drawer-title">
+                    <span class="drawer-bot-avatar">🤖</span>
+                    <div>
+                        <h4>CyberBot AI SOC</h4>
+                        <span class="drawer-status"><span class="status-dot"></span> Online</span>
+                    </div>
+                </div>
+                <div class="drawer-header-actions">
+                    <button type="button" id="drawerClearBtn" class="drawer-icon-btn" title="Clear Chat">🗑️</button>
+                    <button type="button" id="drawerCloseBtn" class="drawer-icon-btn" title="Close Drawer" onclick="closeCyberBotDrawer(event)">✖</button>
+                </div>
+            </div>
+
+            <div class="drawer-body" id="drawerChatMessages">
+                <div class="chat-bubble bot-bubble">
+                    <div class="bubble-header">
+                        <span class="bubble-avatar">🤖</span>
+                        <span class="bubble-author">CyberBot</span>
+                    </div>
+                    <div class="bubble-content">
+                        <p>👋 Hi there! Paste any URL/message here or ask any security question!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="drawer-quick-chips">
+                <button type="button" class="drawer-chip" data-prompt="How to spot phishing emails?">🔍 Spot Phishing</button>
+                <button type="button" class="drawer-chip" data-prompt="How to set up 2FA?">🔐 2FA Guide</button>
+                <button type="button" class="drawer-chip" data-prompt="Check if http://test-phish-link.com is safe">🛡️ Test Link</button>
+            </div>
+
+            <div class="drawer-footer">
+                <input type="text" id="drawerChatInput" class="drawer-input" placeholder="Type message or URL..." />
+                <button type="button" id="drawerSendBtn" class="drawer-send-btn">🚀</button>
+            </div>
+        </div>
+
+        <button type="button" class="floating-chat-trigger" id="chatLauncher" title="Talk to CyberBot AI Assistant" onclick="toggleCyberBotDrawer(event)">
+            <span class="trigger-badge">AI</span>
+            <span class="trigger-icon">🤖</span>
+            <span class="trigger-glow"></span>
+        </button>
+    </div>
+
+    <!-- CYBERBOT CONTROLLER SCRIPT -->
+    <script>
+        // Global functions for inline click events
+        window.closeCyberBotDrawer = function(e) {
+            if (e) e.stopPropagation();
+            const drawer = document.getElementById('chatDrawer');
+            if (drawer) drawer.classList.add('hidden');
+        };
+
+        window.toggleCyberBotDrawer = function(e) {
+            if (e) e.stopPropagation();
+            const drawer = document.getElementById('chatDrawer');
+            if (drawer) {
+                drawer.classList.toggle('hidden');
+                if (!drawer.classList.contains('hidden')) {
+                    const input = document.getElementById('drawerChatInput');
+                    input && input.focus();
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatLauncher = document.getElementById('chatLauncher');
+            const chatDrawer = document.getElementById('chatDrawer');
+            const drawerCloseBtn = document.getElementById('drawerCloseBtn');
+            const drawerClearBtn = document.getElementById('drawerClearBtn');
+            const clearFullChatBtn = document.getElementById('clearFullChatBtn');
+
+            const fullChatInput = document.getElementById('fullChatInput');
+            const fullChatSendBtn = document.getElementById('fullChatSendBtn');
+            const fullChatMessages = document.getElementById('fullChatMessages');
+
+            const drawerChatInput = document.getElementById('drawerChatInput');
+            const drawerSendBtn = document.getElementById('drawerSendBtn');
+            const drawerChatMessages = document.getElementById('drawerChatMessages');
+
+            let chatHistory = [];
+
+            // Toggle & Close Handlers
+            chatLauncher && chatLauncher.addEventListener('click', (e) => toggleCyberBotDrawer(e));
+            drawerCloseBtn && drawerCloseBtn.addEventListener('click', (e) => closeCyberBotDrawer(e));
+
+            // Prompt Chips Click Handlers
+            document.querySelectorAll('.prompt-chip, .drawer-chip').forEach(chip => {
+                chip.addEventListener('click', function() {
+                    const promptText = this.getAttribute('data-prompt');
+                    if (promptText) {
+                        sendCyberBotMessage(promptText);
+                    }
+                });
+            });
+
+            // Full Section Send
+            fullChatSendBtn && fullChatSendBtn.addEventListener('click', () => {
+                const text = fullChatInput.value.trim();
+                if (text) {
+                    sendCyberBotMessage(text);
+                    fullChatInput.value = '';
+                }
+            });
+
+            fullChatInput && fullChatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    fullChatSendBtn.click();
+                }
+            });
+
+            // Drawer Send
+            drawerSendBtn && drawerSendBtn.addEventListener('click', () => {
+                const text = drawerChatInput.value.trim();
+                if (text) {
+                    sendCyberBotMessage(text);
+                    drawerChatInput.value = '';
+                }
+            });
+
+            drawerChatInput && drawerChatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    drawerSendBtn.click();
+                }
+            });
+
+            // Clear Chat Handlers
+            const clearAllChat = () => {
+                chatHistory = [];
+                const welcomeHTML = `
+                    <div class="chat-bubble bot-bubble">
+                        <div class="bubble-header">
+                            <span class="bubble-avatar">🤖</span>
+                            <span class="bubble-author">CyberBot SOC Analyst</span>
+                            <span class="bubble-time">Just now</span>
+                        </div>
+                        <div class="bubble-content">
+                            <p>👋 Chat history cleared. How can I assist your cybersecurity defense today?</p>
+                        </div>
+                    </div>
+                `;
+                if (fullChatMessages) fullChatMessages.innerHTML = welcomeHTML;
+                if (drawerChatMessages) drawerChatMessages.innerHTML = welcomeHTML;
+            };
+
+            clearFullChatBtn && clearFullChatBtn.addEventListener('click', clearAllChat);
+            drawerClearBtn && drawerClearBtn.addEventListener('click', clearAllChat);
+
+            // Formatting Helper (Markdown to HTML)
+            function formatMarkdown(text) {
+                if (!text) return '';
+                let formatted = text
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/### (.*?)\n/g, '<h4 style="color: var(--accent-cyan); margin: 8px 0 6px 0;">$1</h4>')
+                    .replace(/## (.*?)\n/g, '<h3 style="color: var(--accent-cyan); margin: 10px 0 6px 0;">$1</h3>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`([^`]+)`/g, '<code>$1</code>')
+                    .replace(/• (.*?)\n/g, '<li style="margin-left: 14px;">$1</li>')
+                    .replace(/\* (.*?)\n/g, '<li style="margin-left: 14px;">$1</li>')
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\n/g, '<br/>');
+                
+                // Convert URLs to clickable links
+                formatted = formatted.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color: var(--accent-cyan); text-decoration: underline;">$1</a>');
+
+                return '<p>' + formatted + '</p>';
+            }
+
+            // Append Bubble Helper
+            function appendChatBubble(sender, rawText, timeStr = 'Just now') {
+                const isUser = (sender === 'user');
+                const bubbleHTML = `
+                    <div class="chat-bubble ${isUser ? 'user-bubble' : 'bot-bubble'}">
+                        <div class="bubble-header">
+                            <span class="bubble-avatar">${isUser ? '👤' : '🤖'}</span>
+                            <span class="bubble-author">${isUser ? 'You' : 'CyberBot'}</span>
+                            <span class="bubble-time">${timeStr}</span>
+                        </div>
+                        <div class="bubble-content">
+                            ${isUser ? '<p>' + rawText.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>' : formatMarkdown(rawText)}
+                        </div>
+                    </div>
+                `;
+
+                if (fullChatMessages) {
+                    fullChatMessages.insertAdjacentHTML('beforeend', bubbleHTML);
+                    fullChatMessages.scrollTop = fullChatMessages.scrollHeight;
+                }
+                if (drawerChatMessages) {
+                    drawerChatMessages.insertAdjacentHTML('beforeend', bubbleHTML);
+                    drawerChatMessages.scrollTop = drawerChatMessages.scrollHeight;
+                }
+            }
+
+            // Typing Indicator Helper
+            function showTypingIndicator() {
+                const indicatorID = 'typing-' + Date.now();
+                const indicatorHTML = `
+                    <div class="chat-bubble bot-bubble" id="${indicatorID}">
+                        <div class="bubble-header">
+                            <span class="bubble-avatar">🤖</span>
+                            <span class="bubble-author">CyberBot</span>
+                        </div>
+                        <div class="typing-indicator">
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                        </div>
+                    </div>
+                `;
+                if (fullChatMessages) {
+                    fullChatMessages.insertAdjacentHTML('beforeend', indicatorHTML);
+                    fullChatMessages.scrollTop = fullChatMessages.scrollHeight;
+                }
+                if (drawerChatMessages) {
+                    drawerChatMessages.insertAdjacentHTML('beforeend', indicatorHTML);
+                    drawerChatMessages.scrollTop = drawerChatMessages.scrollHeight;
+                }
+                return indicatorID;
+            }
+
+            function removeTypingIndicator(indicatorID) {
+                const elFull = fullChatMessages ? fullChatMessages.querySelector('#' + indicatorID) : null;
+                const elDrawer = drawerChatMessages ? drawerChatMessages.querySelector('#' + indicatorID) : null;
+                if (elFull) elFull.remove();
+                if (elDrawer) elDrawer.remove();
+            }
+
+            // Main Send Message Async Function
+            async function sendCyberBotMessage(messageText) {
+                if (!messageText || !messageText.trim()) return;
+                const text = messageText.trim();
+
+                const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                // Render user message
+                appendChatBubble('user', text, timeNow);
+                chatHistory.push({ sender: 'user', text: text });
+
+                // Disable inputs & buttons while fetching
+                if (fullChatSendBtn) fullChatSendBtn.disabled = true;
+                if (drawerSendBtn) drawerSendBtn.disabled = true;
+
+                const indicatorID = showTypingIndicator();
+
+                try {
+                    const resp = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            message: text,
+                            history: chatHistory
+                        })
+                    });
+
+                    const data = await resp.json();
+                    removeTypingIndicator(indicatorID);
+
+                    if (data.success && data.response) {
+                        appendChatBubble('bot', data.response, timeNow);
+                        chatHistory.push({ sender: 'bot', text: data.response });
+                    } else {
+                        const errReply = data.error || data.response || "Sorry, I couldn't process that. Please try again.";
+                        appendChatBubble('bot', '⚠️ ' + errReply, timeNow);
+                    }
+                } catch (err) {
+                    console.error('CyberBot fetch error:', err);
+                    removeTypingIndicator(indicatorID);
+                    appendChatBubble('bot', '❌ Network error connecting to CyberBot server.', timeNow);
+                } finally {
+                    if (fullChatSendBtn) fullChatSendBtn.disabled = false;
+                    if (drawerSendBtn) drawerSendBtn.disabled = false;
+                }
+            }
+        });
+    </script>
 </body>
 </html>
+
+

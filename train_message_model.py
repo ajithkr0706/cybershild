@@ -117,10 +117,11 @@ def main():
 
     # Save metadata
     metadata = {
-        'accuracy': float(acc),
-        'precision': float(prec),
-        'recall': float(rec),
-        'f1': float(f1),
+        'accuracy': round(float(acc) * 100, 2),
+        'precision': round(float(prec) * 100, 2),
+        'recall': round(float(rec) * 100, 2),
+        'f1': round(float(f1) * 100, 2),
+        'total_samples': len(df),
         'features': 11,
         'model_type': 'Random Forest (Fake Message Detection)'
     }

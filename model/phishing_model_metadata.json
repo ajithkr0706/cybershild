@@ -1,8 +1,8 @@
 {
-  "accuracy": 100.0,
-  "precision": 100.0,
-  "recall": 100.0,
-  "f1": 100.0,
+  "accuracy": 96.44,
+  "precision": 96.16,
+  "recall": 97.83,
+  "f1": 96.99,
   "total_samples": 3928,
   "features": 14,
   "model_type": "Random Forest Classifier (Phishing URL Detection)"

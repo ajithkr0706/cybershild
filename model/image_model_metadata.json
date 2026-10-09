@@ -1,8 +1,8 @@
 {
-  "accuracy": 100.0,
-  "precision": 100.0,
-  "recall": 100.0,
-  "f1": 100.0,
+  "accuracy": 97.0,
+  "precision": 96.12,
+  "recall": 98.02,
+  "f1": 97.06,
   "total_samples": 1000,
   "features": 10,
   "model_type": "Random Forest Classifier (AI Image Detection)"

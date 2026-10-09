@@ -1,8 +1,9 @@
 {
-  "accuracy": 1.0,
-  "precision": 1.0,
-  "recall": 1.0,
-  "f1": 1.0,
+  "accuracy": 96.21,
+  "precision": 95.87,
+  "recall": 95.87,
+  "f1": 95.87,
+  "total_samples": 1320,
   "features": 11,
   "model_type": "Random Forest (Fake Message Detection)"
 }

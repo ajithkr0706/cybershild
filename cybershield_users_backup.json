@@ -1,0 +1,47 @@
+[
+  {
+    "email": "mahiiii@cybershield.com",
+    "username": "admin",
+    "password_hash": "scrypt:32768:8:1$f5v1YIY1Zude40Bj$802008bcf4465742b2ed3792833a46bef428c48b984f2da9fa0ed2df8f458a54e0a9fc1f5531b8d8162eb9f67f0963caf31fa71d268b0f508dc4f0d8b6fd204e",
+    "first_name": "System",
+    "last_name": "Admin",
+    "auth_method": "email",
+    "is_admin": true
+  },
+  {
+    "email": "yadavmahendhar65@gmail.com",
+    "username": "mahendhar",
+    "password_hash": "scrypt:32768:8:1$xPbxmxDlQbQ5QsCP$e4d0cec8517d82264db2baf3e737d336856889bef71f1c8c289295f1e708e752bd42986ec6e151baa1375300d9d84f0be1a8a7d14864b77da3b3dbcfb92a6bd8",
+    "first_name": "Mahendhar",
+    "last_name": "Yadav",
+    "auth_method": "email",
+    "is_admin": false
+  },
+  {
+    "email": "coldstartuser@example.com",
+    "username": "coldstartuser",
+    "password_hash": "scrypt:32768:8:1$9BoQlEKjjNQs5sJi$ff4d20bebe2b5c47a0b9c345fc85ead02aa131dd21e8795c73c689c504d7893b1d8e0384623f018f6cfaea0a2f5f485e6b7a1e393e419e3f64f22c6c30eb552e",
+    "first_name": "Cold",
+    "last_name": "Start",
+    "auth_method": "email",
+    "is_admin": false
+  },
+  {
+    "email": "usernameuser@example.com",
+    "username": "john_doe_99",
+    "password_hash": "scrypt:32768:8:1$NfiO1n3qSlUb71KC$6d62bf341e3c84d496164e6973b6de669bd92272a83f83ad05fb30fc47e28c0aec8a2fca5a914ac62f5b298ed504baef8e4ba92efb3c5189d2070b4295121745",
+    "first_name": "John",
+    "last_name": "Doe",
+    "auth_method": "email",
+    "is_admin": false
+  },
+  {
+    "email": "deploytest@cybershield.ai",
+    "username": "deploytest",
+    "password_hash": "scrypt:32768:8:1$jSiqQvxwuGwkowe7$b7a56bf718c3c8e0c9b6903ed454ca02ad94ddacd0807498f50e2686a34f149fae4c40e27b9913dcda3ff06a388bf3f187e79c3bdb92a0b27d80d480b19b7ac4",
+    "first_name": "Deploy",
+    "last_name": "Test",
+    "auth_method": "email",
+    "is_admin": false
+  }
+]

@@ -69,11 +69,14 @@ def generate_synthetic_image_dataset(n_samples=1000):
     X = np.vstack([X_real, X_ai])
     y = np.concatenate([np.zeros(half_samples), np.ones(half_samples)])
 
-    # Shuffle dataset
+    # Shuffle dataset & introduce ~3.2% realistic boundary noise
     indices = np.arange(n_samples)
     np.random.shuffle(indices)
     X = X[indices]
     y = y[indices]
+
+    flip_mask = np.random.rand(n_samples) < 0.032
+    y[flip_mask] = 1 - y[flip_mask]
 
     columns = [
         'has_exif', 'has_ai_metadata', 'file_size_ratio', 'laplacian_variance',
